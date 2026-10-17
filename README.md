@@ -97,3 +97,4 @@ npm run start
 ## 🔒 Zero-Trust Security Architecture
 
 KubeGuard is architected so that sensitive cluster credentials (such as kubeconfig certificates, bearer tokens, or client keys) are **never exposed to the browser client**. All cluster communication is mediated through backend proxies or in-cluster RBAC `ServiceAccount` tokens.
+
