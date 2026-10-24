@@ -94,3 +94,4 @@ def get_deployments(
     except Exception as e:
         logger.error(f"Unexpected error fetching deployments: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

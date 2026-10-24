@@ -47,39 +47,47 @@ export function WorkloadTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#15243E]/70 font-mono">
-              {workloads.slice(0, 5).map((w) => (
-                <tr
-                  key={w.id}
-                  className="hover:bg-[#0E1E38]/50 transition group"
-                >
-                  <td className="py-2.5 px-2 font-semibold text-[#F1F5FF] group-hover:text-[#00D9FF] transition truncate max-w-[110px]">
-                    {w.name}
-                  </td>
-                  <td className="py-2.5 px-2 text-slate-400 text-[11px]">
-                    {w.namespace}
-                  </td>
-                  <td className="py-2.5 px-2 text-center text-slate-300 font-semibold">
-                    <span className={w.readyReplicas < w.desiredReplicas ? "text-[#FFB020]" : "text-[#10F5A0]"}>
-                      {w.readyReplicas}
-                    </span>
-                    /{w.desiredReplicas}
-                  </td>
-                  <td className="py-2.5 px-2 text-center text-slate-300">
-                    {w.cpuUsage}
-                  </td>
-                  <td className="py-2.5 px-2 text-center text-slate-300">
-                    {w.memUsage}
-                  </td>
-                  <td className="py-2.5 px-2 text-center">
-                    <StatusBadge status={w.status} size="sm" />
-                  </td>
-                  <td className="py-2.5 px-2 text-right text-slate-400 font-semibold">
-                    <span className={w.restarts > 0 ? "text-[#FFB020]" : ""}>
-                      {w.restarts}
-                    </span>
+              {workloads.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-4 text-center text-slate-500 font-mono text-xs">
+                    No workloads found in cluster
                   </td>
                 </tr>
-              ))}
+              ) : (
+                workloads.slice(0, 5).map((w) => (
+                  <tr
+                    key={w.id}
+                    className="hover:bg-[#0E1E38]/50 transition group"
+                  >
+                    <td className="py-2.5 px-2 font-semibold text-[#F1F5FF] group-hover:text-[#00D9FF] transition truncate max-w-[110px]">
+                      {w.name}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-400 text-[11px]">
+                      {w.namespace}
+                    </td>
+                    <td className="py-2.5 px-2 text-center text-slate-300 font-semibold">
+                      <span className={w.readyReplicas < w.desiredReplicas ? "text-[#FFB020]" : "text-[#10F5A0]"}>
+                        {w.readyReplicas}
+                      </span>
+                      /{w.desiredReplicas}
+                    </td>
+                    <td className="py-2.5 px-2 text-center text-slate-300">
+                      {w.cpuUsage}
+                    </td>
+                    <td className="py-2.5 px-2 text-center text-slate-300">
+                      {w.memUsage}
+                    </td>
+                    <td className="py-2.5 px-2 text-center">
+                      <StatusBadge status={w.status} size="sm" />
+                    </td>
+                    <td className="py-2.5 px-2 text-right text-slate-400 font-semibold">
+                      <span className={w.restarts > 0 ? "text-[#FFB020]" : ""}>
+                        {w.restarts}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

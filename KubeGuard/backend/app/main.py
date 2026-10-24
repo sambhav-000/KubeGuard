@@ -87,3 +87,4 @@ def health_check():
         "kubernetes_connected": k8s_manager.is_initialized,
         "active_context": k8s_manager.active_context,
     }
+

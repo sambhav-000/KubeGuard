@@ -83,3 +83,4 @@ def get_cluster_overview():
     except Exception as e:
         logger.error(f"Unexpected error fetching cluster overview: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

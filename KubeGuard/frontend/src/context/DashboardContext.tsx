@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import {
   ClusterInfo,
   Environment,
@@ -8,6 +15,7 @@ import {
   WorkloadItem,
   DeploymentRecord,
   AlertRule,
+  HealthStatus,
 } from "@/lib/types";
 import {
   mockClusters,
@@ -16,6 +24,12 @@ import {
   mockDeployments,
   mockAlertRules,
 } from "@/lib/mock-data";
+import {
+  kubeguardApi,
+  ClusterHealth,
+  KubernetesDeployment,
+  KubernetesPod,
+} from "@/lib/api";
 
 export interface ToastItem {
   id: string;
@@ -59,7 +73,7 @@ interface DashboardContextType {
   confirmModal: ConfirmModalState | null;
   openConfirmModal: (config: Omit<ConfirmModalState, "isOpen">) => void;
   closeConfirmModal: () => void;
-  // Interactive mutations
+  // Interactive operations
   workloads: WorkloadItem[];
   restartWorkload: (workloadId: string) => void;
   scaleWorkload: (workloadId: string, delta: number) => void;
@@ -74,8 +88,31 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
+function deriveWorkloadStatus(desired: number, ready: number): HealthStatus {
+  if (desired > 0 && ready === 0) {
+    return "Failed";
+  }
+  if (ready >= desired) {
+    return "Healthy";
+  }
+  return "Degraded";
+}
+
+function deriveDeploymentStatus(
+  desired: number,
+  available: number
+): "Healthy" | "Rolling Out" | "Failed" | "Rolled Back" {
+  if (desired > 0 && available === 0) {
+    return "Failed";
+  }
+  if (available >= desired) {
+    return "Healthy";
+  }
+  return "Rolling Out";
+}
+
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const [clusters] = useState<ClusterInfo[]>(mockClusters);
+  const [clusters, setClusters] = useState<ClusterInfo[]>(mockClusters);
   const [currentClusterId, setCurrentClusterId] = useState<string>("kube-prod-cluster");
   const [currentEnv, setCurrentEnv] = useState<Environment>("PRODUCTION");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
@@ -95,14 +132,18 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [alertRules, setAlertRules] = useState<AlertRule[]>(mockAlertRules);
 
   const currentCluster = clusters.find((c) => c.id === currentClusterId) || clusters[0];
+  const isRefreshingRef = useRef(false);
 
-  const showToast = (title: string, message?: string, type: ToastItem["type"] = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, title, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4500);
-  };
+  const showToast = useCallback(
+    (title: string, message?: string, type: ToastItem["type"] = "info") => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => [...prev, { id, title, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4500);
+    },
+    []
+  );
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -112,14 +153,166 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setSidebarCollapsed((prev) => !prev);
   };
 
-  const triggerRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
+  // Maps live Kubernetes data to application models
+  const applyLiveData = useCallback(
+    (
+      health: ClusterHealth,
+      deploymentList: KubernetesDeployment[],
+      podList: KubernetesPod[]
+    ) => {
+      // 1. Map workloads conservatively without fabricating unavailable metrics
+      const mappedWorkloads: WorkloadItem[] = deploymentList.map((dep) => {
+        const matchingPods = podList.filter(
+          (p) =>
+            p.namespace === dep.namespace &&
+            (p.name === dep.name || p.name.startsWith(dep.name + "-"))
+        );
+        const totalRestarts = matchingPods.reduce(
+          (acc, p) => acc + (typeof p.restarts === "number" ? p.restarts : 0),
+          0
+        );
+
+        return {
+          id: `${dep.namespace}-${dep.name}`,
+          name: dep.name,
+          namespace: dep.namespace,
+          kind: "Deployment",
+          desiredReplicas: dep.desired_replicas,
+          readyReplicas: dep.ready_replicas,
+          cpuUsage: " — ",
+          cpuPercent: 0,
+          memUsage: " — ",
+          memPercent: 0,
+          status: deriveWorkloadStatus(dep.desired_replicas, dep.ready_replicas),
+          restarts: totalRestarts,
+          lastUpdated: " — ",
+          image: " — ",
+        };
+      });
+
+      // 2. Map deployments conservatively
+      const mappedDeployments: DeploymentRecord[] = deploymentList.map((dep) => ({
+        id: `dep-${dep.namespace}-${dep.name}`,
+        name: dep.name,
+        namespace: dep.namespace,
+        version: " — ",
+        imageTag: " — ",
+        commitHash: " — ",
+        author: " — ",
+        deployedAt: " — ",
+        status: deriveDeploymentStatus(dep.desired_replicas, dep.available_replicas),
+        desiredReplicas: dep.desired_replicas,
+        availableReplicas: dep.available_replicas,
+      }));
+
+      setWorkloads(mappedWorkloads);
+      setDeployments(mappedDeployments);
+
+      // 3. Update cluster metrics
+      const running = podList.filter((p) => p.phase === "Running").length;
+      const pending = podList.filter((p) => p.phase === "Pending").length;
+      const failed = podList.filter((p) => p.phase === "Failed").length;
+
+      setClusters((prev) =>
+        prev.map((c) => ({
+          ...c,
+          name: health.cluster_context || c.name,
+          status: health.status === "connected" ? "healthy" : "degraded",
+          healthPercentage:
+            health.node_count > 0
+              ? Math.round((health.ready_nodes / health.node_count) * 100)
+              : 100,
+          nodeCount: { ready: health.ready_nodes, total: health.node_count },
+          podCount: { running, pending, failed, total: podList.length },
+          lastSync: "Just now",
+        }))
+      );
+
       setLastRefreshed(new Date().toLocaleTimeString());
-      showToast("Cluster state synchronized", "Fetched live metrics from Kubernetes API server", "success");
-    }, 900);
-  };
+    },
+    []
+  );
+
+  // Asynchronous API refresh handler with Promise.all
+  const fetchLiveData = useCallback(
+    async (isManualRefresh: boolean) => {
+      if (isRefreshingRef.current) return;
+      isRefreshingRef.current = true;
+      setIsRefreshing(true);
+
+      try {
+        const [health, deploymentList, podList] = await Promise.all([
+          kubeguardApi.health(),
+          kubeguardApi.deployments(),
+          kubeguardApi.pods(),
+        ]);
+
+        applyLiveData(health, deploymentList, podList);
+
+        if (isManualRefresh) {
+          showToast(
+            "Cluster state synchronized",
+            `Fetched ${deploymentList.length} deployments and ${podList.length} pods from Kubernetes API`,
+            "success"
+          );
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to communicate with Kubernetes API";
+        showToast("Cluster synchronization failed", message, "error");
+      } finally {
+        isRefreshingRef.current = false;
+        setIsRefreshing(false);
+      }
+    },
+    [applyLiveData, showToast]
+  );
+
+  // Automatic live fetch on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadInitialData = async () => {
+      isRefreshingRef.current = true;
+      setIsRefreshing(true);
+
+      try {
+        const [health, deploymentList, podList] = await Promise.all([
+          kubeguardApi.health(),
+          kubeguardApi.deployments(),
+          kubeguardApi.pods(),
+        ]);
+
+        if (!isMounted) return;
+        applyLiveData(health, deploymentList, podList);
+      } catch (err: unknown) {
+        if (!isMounted) return;
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to communicate with Kubernetes API";
+        showToast("Cluster synchronization failed", message, "error");
+      } finally {
+        if (isMounted) {
+          isRefreshingRef.current = false;
+          setIsRefreshing(false);
+        }
+      }
+    };
+
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [applyLiveData, showToast]);
+
+  // Real asynchronous manual refresh
+  const triggerRefresh = useCallback(() => {
+    fetchLiveData(true);
+  }, [fetchLiveData]);
 
   const openConfirmModal = (config: Omit<ConfirmModalState, "isOpen">) => {
     setConfirmModal({ ...config, isOpen: true });
@@ -129,13 +322,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setConfirmModal(null);
   };
 
+  // Simulated handlers preserved without claiming real Kubernetes operations
   const restartWorkload = (workloadId: string) => {
     const wl = workloads.find((w) => w.id === workloadId);
     if (!wl) return;
     openConfirmModal({
-      title: `Restart Pods for ${wl.name}?`,
-      message: `This will trigger a rollout restart for Deployment ${wl.namespace}/${wl.name}. Kubernetes will spin up replacement pods gracefully.`,
-      confirmText: "Restart Pods",
+      title: `Simulate Restart for ${wl.name}?`,
+      message: `This will simulate a rollout restart for ${wl.namespace}/${wl.name} in the local dashboard state.`,
+      confirmText: "Simulate Restart",
       isDanger: true,
       onConfirm: () => {
         setWorkloads((prev) =>
@@ -145,7 +339,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
               : w
           )
         );
-        showToast("Rollout restart initiated", `${wl.name} pods are being recreated gracefully`, "success");
+        showToast("Simulated restart triggered", `Restart simulated for ${wl.name} in dashboard view`, "info");
       },
     });
   };
@@ -155,7 +349,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       prev.map((w) => {
         if (w.id === workloadId) {
           const newDesired = Math.max(1, w.desiredReplicas + delta);
-          showToast("Scaling replica target", `${w.name} scaled to ${newDesired} replicas`, "info");
+          showToast(
+            "Simulated scaling updated",
+            `${w.name} target updated to ${newDesired} replicas (frontend simulation)`,
+            "info"
+          );
           return {
             ...w,
             desiredReplicas: newDesired,
@@ -176,7 +374,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           : inc
       )
     );
-    showToast("Incident marked resolved", "Health probes confirmed normal status", "success");
+    showToast("Incident marked resolved", "Health state updated in dashboard view", "success");
     if (selectedIncident?.id === incidentId) {
       setSelectedIncident((prev) => prev ? { ...prev, severity: "resolved", status: "remediated" } : null);
     }
@@ -186,16 +384,16 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const inc = incidents.find((i) => i.id === incidentId);
     if (!inc) return;
 
-    showToast("KubeGuard Remediation Dispatched", `Executing automated recovery recipe for ${inc.workload}`, "info");
+    showToast("Remediation simulation dispatched", `Simulating recovery workflow for ${inc.workload}`, "info");
     setTimeout(() => {
       setIncidents((prev) =>
         prev.map((i) =>
           i.id === incidentId
-            ? { ...i, severity: "resolved", status: "remediated", actionTaken: "KubeGuard automated recovery recipe executed successfully" }
+            ? { ...i, severity: "resolved", status: "remediated", actionTaken: "Automated recovery simulation verified" }
             : i
         )
       );
-      showToast("Recovery Verified", `${inc.workload} restored to Healthy state`, "success");
+      showToast("Recovery Verified", `${inc.workload} restored to Healthy state (simulated)`, "success");
       if (selectedIncident?.id === incidentId) {
         setSelectedIncident((prev) => prev ? { ...prev, severity: "resolved", status: "remediated" } : null);
       }
@@ -207,19 +405,19 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     if (!dep) return;
 
     openConfirmModal({
-      title: `Rollback Deployment ${dep.name}?`,
-      message: `Are you sure you want to rollback ${dep.name} (${dep.version}) to the previous stable release? This will update the ReplicaSet immediately.`,
-      confirmText: "Execute Rollback",
+      title: `Simulate Rollback for ${dep.name}?`,
+      message: `Are you sure you want to simulate rolling back ${dep.name} in the dashboard view?`,
+      confirmText: "Simulate Rollback",
       isDanger: true,
       onConfirm: () => {
         setDeployments((prev) =>
           prev.map((d) =>
             d.id === deploymentId
-              ? { ...d, version: "v2.0.8 (rolled back)", status: "Healthy", deployedAt: "Just now" }
+              ? { ...d, version: "v2.0.8 (simulated rollback)", status: "Healthy", deployedAt: "Just now" }
               : d
           )
         );
-        showToast("Rollback executed", `Rolled back ${dep.name} to prior stable revision`, "success");
+        showToast("Simulated rollback applied", `Rollback simulation applied to ${dep.name}`, "info");
       },
     });
   };

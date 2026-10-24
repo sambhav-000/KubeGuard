@@ -101,3 +101,4 @@ def get_nodes():
     except Exception as e:
         logger.error(f"Unexpected error fetching nodes: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

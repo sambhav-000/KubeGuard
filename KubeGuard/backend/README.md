@@ -53,3 +53,4 @@ Server will be running at:
 | `GET` | `/api/v1/pods` | List all pods or filter with `?namespace=<name>` |
 | `GET` | `/api/v1/deployments`| List all deployments or filter with `?namespace=<name>` |
 | `GET` | `/api/v1/events` | List recent cluster events |
+

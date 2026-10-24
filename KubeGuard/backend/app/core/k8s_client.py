@@ -98,3 +98,4 @@ class KubernetesClientManager:
 
 # Global singleton instance
 k8s_manager = KubernetesClientManager()
+

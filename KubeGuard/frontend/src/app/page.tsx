@@ -185,15 +185,15 @@ export default function OverviewPage() {
             <div className="mt-4 pt-3 border-t border-[#15243E] space-y-1.5 font-mono text-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-[#F1F5FF] font-semibold">
-                  <span>kube-prod-cluster</span>
+                  <span>{currentCluster.name}</span>
                   <ChevronDown size={12} className="text-slate-400" />
                 </div>
-                <span className="text-slate-400">v1.31.0</span>
+                <span className="text-slate-400">{currentCluster.k8sVersion}</span>
               </div>
 
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-                <span>Uptime • 12d 4h 32m</span>
-                <span className="text-[#00D9FF]">Last Sync 2m ago</span>
+                <span>Uptime • {currentCluster.uptime}</span>
+                <span className="text-[#00D9FF]">Last Sync {currentCluster.lastSync}</span>
               </div>
             </div>
           </div>
@@ -205,23 +205,23 @@ export default function OverviewPage() {
         {/* Card 1: Cluster Health */}
         <MetricCard
           title="Cluster Health"
-          value="98%"
+          value={`${currentCluster.healthPercentage}%`}
           trendText="↑ 2% vs last 24h"
-          bottomText="3 / 3 nodes healthy"
+          bottomText={`${currentCluster.nodeCount.ready} / ${currentCluster.nodeCount.total} nodes healthy`}
           icon={ShieldCheck}
           accent="emerald"
           type="ring-sparkline"
-          progressPercent={98}
+          progressPercent={currentCluster.healthPercentage}
         />
 
         {/* Card 2: Running Pods */}
         <MetricCard
           title="Running Pods"
-          value="42 / 48"
+          value={`${currentCluster.podCount.running} / ${currentCluster.podCount.total}`}
           subDetail={
             <div className="text-slate-400 text-xs">
-              <span>5 pending</span>{" "}
-              <span className="text-[#FF426D] font-bold">| 1 failed</span>
+              <span>{currentCluster.podCount.pending} pending</span>{" "}
+              <span className="text-[#FF426D] font-bold">| {currentCluster.podCount.failed} failed</span>
             </div>
           }
           trendText="↑ 4% vs last 24h"
