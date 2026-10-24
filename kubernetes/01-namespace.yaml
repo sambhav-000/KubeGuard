@@ -5,3 +5,4 @@ metadata:
   labels:
     app.kubernetes.io/part-of: kubeguard
     environment: local-development
+

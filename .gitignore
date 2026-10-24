@@ -42,3 +42,17 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Python Virtual Environments & Cache
+.venv/
+**/.venv/
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+
