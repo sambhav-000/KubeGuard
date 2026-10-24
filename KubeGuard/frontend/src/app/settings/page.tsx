@@ -29,9 +29,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Page Header */}
-      <div className="pb-4 border-b border-[#1c283f]">
-        <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-          <Settings className="text-slate-400" size={26} />
+      <div className="pb-4 border-b border-[#15243E]">
+        <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+          <Settings className="text-[#00D9FF]" size={26} />
           <span>Platform Settings & Cluster Connections</span>
         </h1>
         <p className="text-xs text-slate-400 mt-1">
@@ -40,8 +40,8 @@ export default function SettingsPage() {
       </div>
 
       {/* Security Banner */}
-      <div className="bg-sky-950/30 border border-sky-800/40 rounded-2xl p-4 flex items-start gap-3">
-        <Lock className="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" />
+      <div className="bg-sky-950/20 border border-sky-800/40 rounded-2xl p-4 flex items-start gap-3">
+        <Lock className="w-5 h-5 text-[#00D9FF] flex-shrink-0 mt-0.5" />
         <div className="text-xs text-sky-200">
           <span className="font-bold">Zero-Trust Credential Architecture: </span>
           KubeGuard communicates with the cluster via secure in-cluster RBAC ServiceAccounts or backend proxy endpoints. Sensitive kubeconfig certificates and tokens are never transferred to or exposed in the browser client.
@@ -50,10 +50,10 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Cluster Connection Section */}
-        <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#1c283f]">
-            <Server size={16} className="text-sky-400" />
-            <h2 className="text-sm font-bold text-white tracking-tight">
+        <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#15243E]">
+            <Server size={16} className="text-[#00D9FF]" />
+            <h2 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
               Active Cluster Connection ({currentCluster.name})
             </h2>
           </div>
@@ -67,7 +67,7 @@ export default function SettingsPage() {
                 type="text"
                 value={apiEndpoint}
                 onChange={(e) => setApiEndpoint(e.target.value)}
-                className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-[#00D9FF]"
               />
             </div>
 
@@ -79,17 +79,17 @@ export default function SettingsPage() {
                 type="number"
                 value={pollInterval}
                 onChange={(e) => setPollInterval(e.target.value)}
-                className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-[#00D9FF]"
               />
             </div>
           </div>
         </div>
 
         {/* Notification Preferences */}
-        <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#1c283f]">
-            <Bell size={16} className="text-amber-400" />
-            <h2 className="text-sm font-bold text-white tracking-tight">
+        <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#15243E]">
+            <Bell size={16} className="text-[#FFB020]" />
+            <h2 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
               Notification Channel Targets
             </h2>
           </div>
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                 type="text"
                 value={slackWebhook}
                 onChange={(e) => setSlackWebhook(e.target.value)}
-                className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-[#00D9FF]"
               />
             </div>
 
@@ -115,17 +115,17 @@ export default function SettingsPage() {
                 type="password"
                 value={pagerDutyKey}
                 onChange={(e) => setPagerDutyKey(e.target.value)}
-                className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-[#00D9FF]"
               />
             </div>
           </div>
         </div>
 
         {/* Self-Healing Policy Guardrails */}
-        <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-[#1c283f]">
+        <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-[#15243E]">
             <Sparkles size={16} className="text-violet-400" />
-            <h2 className="text-sm font-bold text-white tracking-tight">
+            <h2 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
               Autonomous Self-Healing Guardrails
             </h2>
           </div>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                 type="number"
                 value={maxRollbacks}
                 onChange={(e) => setMaxRollbacks(e.target.value)}
-                className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-blue-500"
+                className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-[#00D9FF]"
               />
               <span className="text-[10px] text-slate-400 mt-1 block">
                 Prevents infinite flapping during systemic infrastructure faults.
@@ -150,7 +150,7 @@ export default function SettingsPage() {
               <label className="block text-slate-300 font-semibold mb-1">
                 Post-Remediation Health Verification Window
               </label>
-              <select className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+              <select className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00D9FF] cursor-pointer">
                 <option>3 minutes (Quick canary check)</option>
                 <option>5 minutes (Recommended default)</option>
                 <option>10 minutes (Deep readiness soak)</option>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/30 transition cursor-pointer"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/30 transition cursor-pointer"
           >
             <Save size={15} />
             <span>Save Preferences</span>
@@ -173,4 +173,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

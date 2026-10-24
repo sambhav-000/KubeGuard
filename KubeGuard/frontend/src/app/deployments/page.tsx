@@ -28,10 +28,10 @@ export default function DeploymentHistoryPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1c283f]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#15243E]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <History className="text-sky-400" size={26} />
+          <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+            <History className="text-[#00D9FF]" size={26} />
             <span>Deployment History & Rollbacks</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -47,16 +47,16 @@ export default function DeploymentHistoryPage() {
             placeholder="Search revision or commit..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500/60"
+            className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#00D9FF]/60"
           />
         </div>
       </div>
 
       {/* Deployments Full Table */}
-      <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm overflow-x-auto">
+      <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#1c283f] text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+            <tr className="border-b border-[#15243E] text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
               <th className="py-3 px-3">Application</th>
               <th className="py-3 px-3">Revision</th>
               <th className="py-3 px-3">Git Commit</th>
@@ -66,11 +66,11 @@ export default function DeploymentHistoryPage() {
               <th className="py-3 px-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#172238]">
+          <tbody className="divide-y divide-[#15243E]/60">
             {filtered.map((dep) => (
-              <tr key={dep.id} className="hover:bg-[#121c33]/60 transition group">
+              <tr key={dep.id} className="hover:bg-[#050D1C]/80 transition group">
                 <td className="py-3.5 px-3">
-                  <div className="font-semibold text-white group-hover:text-sky-300 transition">
+                  <div className="font-semibold text-[#F1F5FF] group-hover:text-[#00D9FF] transition">
                     {dep.name}
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono">
@@ -84,7 +84,7 @@ export default function DeploymentHistoryPage() {
 
                 <td className="py-3.5 px-3">
                   <div className="flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
-                    <GitCommit size={13} className="text-sky-400" />
+                    <GitCommit size={13} className="text-[#00D9FF]" />
                     <span>{dep.commitHash}</span>
                   </div>
                 </td>
@@ -104,7 +104,7 @@ export default function DeploymentHistoryPage() {
                 <td className="py-3.5 px-3 text-right">
                   <button
                     onClick={() => rollbackDeployment(dep.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-[#050D1C] hover:bg-[#15243E] border border-[#172A46] transition"
                   >
                     <RotateCcw size={12} />
                     <span>Rollback</span>
@@ -118,4 +118,3 @@ export default function DeploymentHistoryPage() {
     </div>
   );
 }
-

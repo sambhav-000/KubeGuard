@@ -34,10 +34,10 @@ export default function AlertRulesPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1c283f]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#15243E]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <BellRing className="text-amber-400" size={26} />
+          <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+            <BellRing className="text-[#FFB020]" size={26} />
             <span>Alert Rules & Threshold Policies</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -48,7 +48,7 @@ export default function AlertRulesPage() {
         {/* Create Rule CTA */}
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/30 transition cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/30 transition cursor-pointer"
         >
           <Plus size={15} />
           <span>Add Alert Rule</span>
@@ -60,18 +60,18 @@ export default function AlertRulesPage() {
         {alertRules.map((rule) => (
           <div
             key={rule.id}
-            className={`bg-[#0f172a] border rounded-2xl p-5 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            className={`bg-[#08152B] border rounded-2xl p-5 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm ${
               rule.enabled
-                ? "border-[#263244] hover:border-slate-700"
-                : "border-slate-800/40 opacity-60"
+                ? "border-[#172A46] hover:border-slate-600"
+                : "border-[#172A46]/40 opacity-50"
             }`}
           >
             <div className="flex items-start gap-4">
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   rule.severity === "critical"
-                    ? "bg-rose-500/15 border border-rose-500/30 text-rose-400"
-                    : "bg-amber-500/15 border border-amber-500/30 text-amber-400"
+                    ? "bg-rose-500/10 border border-rose-500/30 text-[#FF426D]"
+                    : "bg-amber-500/10 border border-amber-500/30 text-[#FFB020]"
                 }`}
               >
                 <AlertTriangle size={20} />
@@ -79,7 +79,7 @@ export default function AlertRulesPage() {
 
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white tracking-tight">
+                  <h3 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
                     {rule.name}
                   </h3>
                   <StatusBadge status={rule.severity} size="sm" />
@@ -88,7 +88,7 @@ export default function AlertRulesPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400 mt-1">
                   <span>Target: {rule.target}</span>
                   <span>•</span>
-                  <span className="text-sky-300 font-semibold">
+                  <span className="text-[#00D9FF] font-semibold">
                     {rule.metric} {rule.condition} {rule.threshold}
                   </span>
                   <span>for {rule.duration}</span>
@@ -102,7 +102,7 @@ export default function AlertRulesPage() {
                   {rule.channels.map((ch) => (
                     <span
                       key={ch}
-                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#162238] text-slate-300 border border-[#203352]"
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#050D1C] text-slate-300 border border-[#172A46]"
                     >
                       {ch}
                     </span>
@@ -120,7 +120,7 @@ export default function AlertRulesPage() {
               <button
                 onClick={() => toggleAlertRule(rule.id)}
                 className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
-                  rule.enabled ? "bg-blue-600" : "bg-slate-700"
+                  rule.enabled ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-slate-700"
                 }`}
               >
                 <div
@@ -136,16 +136,16 @@ export default function AlertRulesPage() {
 
       {/* Create Rule Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0f172a] border border-[#263244] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#08152B] border border-[#172A46] rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
             <button
               onClick={() => setCreateModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
             >
               <X size={18} />
             </button>
 
-            <h3 className="text-base font-bold text-white tracking-tight">
+            <h3 className="text-base font-bold text-[#F1F5FF] tracking-tight">
               Create New Kubernetes Alert Rule
             </h3>
             <p className="text-xs text-slate-400 mt-1">
@@ -163,7 +163,7 @@ export default function AlertRulesPage() {
                   placeholder="e.g. Ingress Latency Degradation"
                   value={newRuleName}
                   onChange={(e) => setNewRuleName(e.target.value)}
-                  className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00D9FF]"
                 />
               </div>
 
@@ -175,7 +175,7 @@ export default function AlertRulesPage() {
                   <select
                     value={newRuleMetric}
                     onChange={(e) => setNewRuleMetric(e.target.value)}
-                    className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00D9FF] cursor-pointer"
                   >
                     <option>CPU Utilization</option>
                     <option>Memory Utilization</option>
@@ -192,7 +192,7 @@ export default function AlertRulesPage() {
                     type="text"
                     value={newRuleThreshold}
                     onChange={(e) => setNewRuleThreshold(e.target.value)}
-                    className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00D9FF]"
                   />
                 </div>
               </div>
@@ -201,13 +201,13 @@ export default function AlertRulesPage() {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-300 hover:text-white bg-slate-800"
+                  className="px-4 py-2 rounded-xl text-slate-300 hover:text-white bg-[#050D1C] border border-[#172A46]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl text-white bg-blue-600 hover:bg-blue-500 font-semibold"
+                  className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 font-semibold shadow-md shadow-blue-900/30"
                 >
                   Create Rule
                 </button>
@@ -219,4 +219,3 @@ export default function AlertRulesPage() {
     </div>
   );
 }
-

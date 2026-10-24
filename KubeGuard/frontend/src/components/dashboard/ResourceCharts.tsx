@@ -3,403 +3,381 @@
 import React, { useState } from "react";
 import { useDashboard } from "@/context/DashboardContext";
 import { mockMetricsData } from "@/lib/mock-data";
-import { Activity, Cpu, HardDrive, Wifi, Layers } from "lucide-react";
+import { Cpu, HardDrive, Wifi, Activity } from "lucide-react";
 
 export function ResourceCharts() {
   const { timeRange, setTimeRange } = useDashboard();
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"compute" | "network">("compute");
+  const [cpuHoverIdx, setCpuHoverIdx] = useState<number | null>(null);
+  const [netHoverIdx, setNetHoverIdx] = useState<number | null>(null);
 
   const rawData = mockMetricsData[timeRange] || mockMetricsData["6h"];
 
-  // Dimensions
-  const width = 640;
-  const height = 180;
+  // Chart dimensions
+  const miniWidth = 320;
+  const miniHeight = 110;
 
-  // Compute charts
-  const pointsCpu = rawData.map((d, i) => ({
-    x: (i / (rawData.length - 1)) * width,
-    y: height - (d.cpu / 100) * height,
+  // CPU Points (0..100)
+  const cpuPoints = rawData.map((d, i) => ({
+    x: (i / (rawData.length - 1)) * miniWidth,
+    y: miniHeight - (d.cpu / 100) * miniHeight,
   }));
+  const cpuPathD = `M ${cpuPoints.map((p) => `${p.x},${p.y}`).join(" L ")}`;
+  const cpuAreaD = `${cpuPathD} L ${miniWidth},${miniHeight} L 0,${miniHeight} Z`;
 
-  const pointsMem = rawData.map((d, i) => ({
-    x: (i / (rawData.length - 1)) * width,
-    y: height - (d.memory / 100) * height,
+  // Memory Points (0..100)
+  const memPoints = rawData.map((d, i) => ({
+    x: (i / (rawData.length - 1)) * miniWidth,
+    y: miniHeight - (d.memory / 100) * miniHeight,
   }));
+  const memPathD = `M ${memPoints.map((p) => `${p.x},${p.y}`).join(" L ")}`;
+  const memAreaD = `${memPathD} L ${miniWidth},${miniHeight} L 0,${miniHeight} Z`;
 
-  // Network charts (scale to max ~400 KB/s)
-  const maxNet = 400;
-  const pointsNetIn = rawData.map((d, i) => ({
-    x: (i / (rawData.length - 1)) * width,
-    y: height - (d.networkIn / maxNet) * height,
+  // Network Traffic Dimensions
+  const netWidth = 660;
+  const netHeight = 90;
+  const maxNet = 20; // 20 MB/s
+
+  const netInPoints = rawData.map((d, i) => ({
+    x: (i / (rawData.length - 1)) * netWidth,
+    y: netHeight - (d.networkIn / maxNet) * netHeight,
   }));
+  const netInPath = `M ${netInPoints.map((p) => `${p.x},${p.y}`).join(" L ")}`;
+  const netInArea = `${netInPath} L ${netWidth},${netHeight} L 0,${netHeight} Z`;
 
-  const pointsNetOut = rawData.map((d, i) => ({
-    x: (i / (rawData.length - 1)) * width,
-    y: height - (d.networkOut / maxNet) * height,
+  const netOutPoints = rawData.map((d, i) => ({
+    x: (i / (rawData.length - 1)) * netWidth,
+    y: netHeight - (d.networkOut / maxNet) * netHeight,
   }));
+  const netOutPath = `M ${netOutPoints.map((p) => `${p.x},${p.y}`).join(" L ")}`;
 
-  const pathCpu = `M ${pointsCpu.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-  const areaCpu = `${pathCpu} L ${width},${height} L 0,${height} Z`;
-
-  const pathMem = `M ${pointsMem.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-  const areaMem = `${pathMem} L ${width},${height} L 0,${height} Z`;
-
-  const pathNetIn = `M ${pointsNetIn.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-  const areaNetIn = `${pathNetIn} L ${width},${height} L 0,${height} Z`;
-
-  const pathNetOut = `M ${pointsNetOut.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-
-  // Threshold 80% line
-  const thresholdY = height - 0.8 * height;
-
-  const latest = rawData[rawData.length - 1];
+  // Latest snapshot metrics
+  const latest = rawData[rawData.length - 1] || {
+    cpu: 42,
+    memory: 58,
+    networkIn: 12.4,
+    networkOut: 8.7,
+  };
 
   return (
-    <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm">
-      {/* Header with Title + Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1f2b3f]">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
-            <Activity size={18} />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white tracking-tight">
-              Cluster Resource Utilization
-            </h2>
-            <p className="text-xs text-slate-400">
-              Real-time resource trends & threshold monitoring
-            </p>
-          </div>
-        </div>
+    <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm space-y-6">
+      {/* Top Header: Title + Time Range Switcher */}
+      <div className="flex items-center justify-between pb-3 border-b border-[#15243E]">
+        <h2 className="text-base font-bold text-[#F1F5FF] tracking-tight">
+          Resource Utilization
+        </h2>
 
-        {/* View Switcher & Time Filter */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Tab: Compute vs Network */}
-          <div className="flex bg-[#0a101d] border border-[#1a2846] rounded-xl p-0.5 text-xs font-medium">
+        {/* Time filters */}
+        <div className="flex items-center bg-[#050D1C] border border-[#172A46] rounded-xl p-1 text-xs font-mono">
+          {(["1h", "6h", "24h", "7d"] as const).map((r) => (
             <button
-              onClick={() => setActiveTab("compute")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition ${
-                activeTab === "compute"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+              key={r}
+              onClick={() => setTimeRange(r)}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                timeRange === r
+                  ? "bg-[#2563EB] text-white font-bold shadow-[0_0_12px_rgba(37,99,235,0.5)]"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
-              <Cpu size={13} />
-              <span>CPU & Memory</span>
+              {r}
             </button>
-            <button
-              onClick={() => setActiveTab("network")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition ${
-                activeTab === "network"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Wifi size={13} />
-              <span>Network I/O</span>
-            </button>
-          </div>
-
-          {/* Time Filter Pills */}
-          <div className="flex bg-[#0a101d] border border-[#1a2846] rounded-xl p-0.5 text-xs font-medium">
-            {(["1h", "6h", "24h", "7d"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setTimeRange(r)}
-                className={`px-2.5 py-1 rounded-lg text-xs transition ${
-                  timeRange === r
-                    ? "bg-[#1d4ed8] text-white font-semibold shadow-sm"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Legend & Current Values */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mt-4 text-xs">
-        <div className="flex items-center gap-4">
-          {activeTab === "compute" ? (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#06b6d4]" />
-                <span className="text-slate-400">CPU Usage:</span>
-                <span className="font-mono font-bold text-cyan-300">
+      {/* Two Side-by-Side Area Charts: CPU Usage & Memory Usage */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* CPU Usage Card */}
+        <div className="bg-[#050D1C] border border-[#172A46] rounded-xl p-4 flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[#00D9FF]">
+                <Cpu size={17} />
+              </div>
+              <div>
+                <div className="text-xs text-slate-400 font-medium">CPU Usage</div>
+                <div className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight font-mono">
                   {latest.cpu}%
-                </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#a855f7]" />
-                <span className="text-slate-400">Memory:</span>
-                <span className="font-mono font-bold text-purple-300">
-                  {latest.memory}%
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
-                <span className="w-3 border-b border-rose-500/80 border-dashed" />
-                <span>80% Warning Limit</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8]" />
-                <span className="text-slate-400">Inbound Traffic:</span>
-                <span className="font-mono font-bold text-sky-300">
-                  {latest.networkIn} KB/s
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-                <span className="text-slate-400">Outbound Traffic:</span>
-                <span className="font-mono font-bold text-amber-300">
-                  {latest.networkOut} KB/s
-                </span>
-              </div>
-            </>
-          )}
+            </div>
+
+            <div className="text-[11px] font-mono text-[#FFB020] flex items-center gap-1.5 font-semibold">
+              <span>Warning 70%</span>
+            </div>
+          </div>
+
+          {/* SVG Area Chart */}
+          <div className="mt-3 flex">
+            {/* Y-Axis */}
+            <div className="flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2 h-[110px] select-none">
+              <span>100%</span>
+              <span>75%</span>
+              <span>50%</span>
+              <span>25%</span>
+              <span>0%</span>
+            </div>
+
+            <div className="relative flex-1 h-[110px]">
+              <svg
+                viewBox={`0 0 ${miniWidth} ${miniHeight}`}
+                className="w-full h-full overflow-visible"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient id="cpuGradCyber" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00D9FF" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#00D9FF" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Subtle Grid Lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => (
+                  <line
+                    key={idx}
+                    x1="0"
+                    y1={miniHeight * pct}
+                    x2={miniWidth}
+                    y2={miniHeight * pct}
+                    stroke="#15243E"
+                    strokeWidth="1"
+                  />
+                ))}
+
+                {/* Warning 70% Dashed Line */}
+                <line
+                  x1="0"
+                  y1={miniHeight * (1 - 0.7)}
+                  x2={miniWidth}
+                  y2={miniHeight * (1 - 0.7)}
+                  stroke="#FFB020"
+                  strokeWidth="1.2"
+                  strokeDasharray="4 4"
+                  opacity="0.85"
+                />
+
+                {/* CPU Area & Stroke */}
+                <path d={cpuAreaD} fill="url(#cpuGradCyber)" />
+                <path
+                  d={cpuPathD}
+                  fill="none"
+                  stroke="#00D9FF"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="filter drop-shadow-[0_0_8px_rgba(0,217,255,0.6)]"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* X Axis */}
+          <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1.5 pl-8">
+            <span>08:00</span>
+            <span>10:00</span>
+            <span>12:00</span>
+            <span>14:00</span>
+          </div>
         </div>
 
-        <div className="text-[11px] text-slate-400 font-mono">
-          Hover along chart to inspect time slices
+        {/* Memory Usage Card */}
+        <div className="bg-[#050D1C] border border-[#172A46] rounded-xl p-4 flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-[#A855F7]">
+                <HardDrive size={17} />
+              </div>
+              <div>
+                <div className="text-xs text-slate-400 font-medium">Memory Usage</div>
+                <div className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight font-mono">
+                  {latest.memory}%
+                </div>
+              </div>
+            </div>
+
+            <div className="text-[11px] font-mono text-[#FFB020] flex items-center gap-1.5 font-semibold">
+              <span>Warning 80%</span>
+            </div>
+          </div>
+
+          {/* SVG Area Chart */}
+          <div className="mt-3 flex">
+            {/* Y-Axis */}
+            <div className="flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2 h-[110px] select-none">
+              <span>100%</span>
+              <span>75%</span>
+              <span>50%</span>
+              <span>25%</span>
+              <span>0%</span>
+            </div>
+
+            <div className="relative flex-1 h-[110px]">
+              <svg
+                viewBox={`0 0 ${miniWidth} ${miniHeight}`}
+                className="w-full h-full overflow-visible"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient id="memGradCyber" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#A855F7" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#A855F7" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Subtle Grid Lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => (
+                  <line
+                    key={idx}
+                    x1="0"
+                    y1={miniHeight * pct}
+                    x2={miniWidth}
+                    y2={miniHeight * pct}
+                    stroke="#15243E"
+                    strokeWidth="1"
+                  />
+                ))}
+
+                {/* Warning 80% Dashed Line */}
+                <line
+                  x1="0"
+                  y1={miniHeight * (1 - 0.8)}
+                  x2={miniWidth}
+                  y2={miniHeight * (1 - 0.8)}
+                  stroke="#FFB020"
+                  strokeWidth="1.2"
+                  strokeDasharray="4 4"
+                  opacity="0.85"
+                />
+
+                {/* Memory Area & Stroke */}
+                <path d={memAreaD} fill="url(#memGradCyber)" />
+                <path
+                  d={memPathD}
+                  fill="none"
+                  stroke="#A855F7"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="filter drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* X Axis */}
+          <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1.5 pl-8">
+            <span>08:00</span>
+            <span>10:00</span>
+            <span>12:00</span>
+            <span>14:00</span>
+          </div>
         </div>
       </div>
 
-      {/* Main SVG Chart with Hover Overlay */}
-      <div className="relative mt-4">
-        <div className="flex">
-          {/* Y Axis */}
-          <div className="flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2.5 select-none h-[180px]">
-            {activeTab === "compute" ? (
-              <>
-                <span>100%</span>
-                <span>80%</span>
-                <span>50%</span>
-                <span>20%</span>
-                <span>0%</span>
-              </>
-            ) : (
-              <>
-                <span>400k</span>
-                <span>300k</span>
-                <span>200k</span>
-                <span>100k</span>
-                <span>0k</span>
-              </>
-            )}
+      {/* Bottom Sub-Section: Network Traffic */}
+      <div className="bg-[#050D1C] border border-[#172A46] rounded-xl p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#15243E]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-[#2563EB]">
+              <Wifi size={17} />
+            </div>
+            <div>
+              <div className="text-xs text-slate-400 font-medium">Network Traffic</div>
+              <div className="flex items-center gap-3 text-xs font-mono mt-0.5">
+                <span className="text-[#00D9FF] font-semibold">
+                  Inbound 12.4 MB/s <span className="text-[#10F5A0]">↑ 8%</span>
+                </span>
+                <span className="text-[#A855F7] font-semibold">
+                  Outbound 8.7 MB/s <span className="text-[#10F5A0]">↑ 3%</span>
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Chart SVG */}
-          <div
-            className="relative flex-1 h-[180px]"
-            onMouseLeave={() => setHoverIdx(null)}
-          >
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-xs font-mono">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00D9FF]" />
+              <span className="text-slate-400">Inbound</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#A855F7]" />
+              <span className="text-slate-400">Outbound</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Dual Line Chart */}
+        <div className="mt-4 flex">
+          {/* Y Axis */}
+          <div className="flex flex-col justify-between text-[10px] text-slate-500 font-mono pr-2 h-[90px] select-none">
+            <span>20 MB/s</span>
+            <span>10 MB/s</span>
+            <span>0</span>
+          </div>
+
+          <div className="relative flex-1 h-[90px]">
             <svg
-              viewBox={`0 0 ${width} ${height}`}
+              viewBox={`0 0 ${netWidth} ${netHeight}`}
               className="w-full h-full overflow-visible"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.01" />
-                </linearGradient>
-                <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.01" />
-                </linearGradient>
-                <linearGradient id="netInGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.01" />
+                <linearGradient id="netInCyber" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00D9FF" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#00D9FF" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
-              {/* Horizontal Grid lines */}
-              {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => (
+              {/* Grid Lines */}
+              {[0, 0.5, 1].map((pct, idx) => (
                 <line
                   key={idx}
                   x1="0"
-                  y1={height * pct}
-                  x2={width}
-                  y2={height * pct}
-                  stroke="#1c283f"
+                  y1={netHeight * pct}
+                  x2={netWidth}
+                  y2={netHeight * pct}
+                  stroke="#15243E"
                   strokeWidth="1"
                 />
               ))}
 
-              {/* 80% Threshold reference line */}
-              {activeTab === "compute" && (
-                <line
-                  x1="0"
-                  y1={thresholdY}
-                  x2={width}
-                  y2={thresholdY}
-                  stroke="#f43f5e"
-                  strokeWidth="1.2"
-                  strokeDasharray="4 4"
-                  opacity="0.8"
-                />
-              )}
+              {/* Inbound Area & Path */}
+              <path d={netInArea} fill="url(#netInCyber)" />
+              <path
+                d={netInPath}
+                fill="none"
+                stroke="#00D9FF"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="filter drop-shadow-[0_0_8px_rgba(0,217,255,0.5)]"
+              />
 
-              {/* Render curves depending on activeTab */}
-              {activeTab === "compute" ? (
-                <>
-                  <path d={areaCpu} fill="url(#cpuGrad)" />
-                  <path
-                    d={pathCpu}
-                    fill="none"
-                    stroke="#06b6d4"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  <path d={areaMem} fill="url(#memGrad)" />
-                  <path
-                    d={pathMem}
-                    fill="none"
-                    stroke="#a855f7"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </>
-              ) : (
-                <>
-                  <path d={areaNetIn} fill="url(#netInGrad)" />
-                  <path
-                    d={pathNetIn}
-                    fill="none"
-                    stroke="#38bdf8"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d={pathNetOut}
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </>
-              )}
-
-              {/* Hover Guides */}
-              {hoverIdx !== null && (
-                <>
-                  <line
-                    x1={pointsCpu[hoverIdx].x}
-                    y1="0"
-                    x2={pointsCpu[hoverIdx].x}
-                    y2={height}
-                    stroke="#ffffff"
-                    strokeWidth="1"
-                    strokeDasharray="3 3"
-                    opacity="0.7"
-                  />
-                  {activeTab === "compute" ? (
-                    <>
-                      <circle
-                        cx={pointsCpu[hoverIdx].x}
-                        cy={pointsCpu[hoverIdx].y}
-                        r="4"
-                        fill="#06b6d4"
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx={pointsMem[hoverIdx].x}
-                        cy={pointsMem[hoverIdx].y}
-                        r="4"
-                        fill="#a855f7"
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <circle
-                        cx={pointsNetIn[hoverIdx].x}
-                        cy={pointsNetIn[hoverIdx].y}
-                        r="4"
-                        fill="#38bdf8"
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx={pointsNetOut[hoverIdx].x}
-                        cy={pointsNetOut[hoverIdx].y}
-                        r="4"
-                        fill="#f59e0b"
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                      />
-                    </>
-                  )}
-                </>
-              )}
+              {/* Outbound Path */}
+              <path
+                d={netOutPath}
+                fill="none"
+                stroke="#A855F7"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="filter drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
+              />
             </svg>
-
-            {/* Hover Column Triggers */}
-            <div className="absolute inset-0 flex">
-              {rawData.map((d, idx) => (
-                <div
-                  key={idx}
-                  className="flex-1 cursor-crosshair"
-                  onMouseEnter={() => setHoverIdx(idx)}
-                />
-              ))}
-            </div>
-
-            {/* Floating Tooltip */}
-            {hoverIdx !== null && (
-              <div
-                className="absolute pointer-events-none -top-12 z-20 bg-[#0d162a]/95 border border-[#1e2f4f] rounded-xl px-3 py-1.5 shadow-2xl text-[11px] transform -translate-x-1/2 flex items-center gap-3 backdrop-blur-md"
-                style={{
-                  left: `${(hoverIdx / (rawData.length - 1)) * 100}%`,
-                }}
-              >
-                <span className="font-semibold text-white">
-                  {rawData[hoverIdx].timeLabel}
-                </span>
-                {activeTab === "compute" ? (
-                  <>
-                    <span className="text-cyan-400 font-mono">
-                      CPU: {rawData[hoverIdx].cpu}%
-                    </span>
-                    <span className="text-purple-400 font-mono">
-                      Mem: {rawData[hoverIdx].memory}%
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sky-400 font-mono">
-                      In: {rawData[hoverIdx].networkIn} KB/s
-                    </span>
-                    <span className="text-amber-400 font-mono">
-                      Out: {rawData[hoverIdx].networkOut} KB/s
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* X Axis Time Labels */}
-        <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-2 pl-7 pr-2">
-          {rawData.map((d, idx) => (
-            <span key={idx}>{d.timeLabel}</span>
-          ))}
+        {/* X Axis */}
+        <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1.5 pl-14">
+          <span>08:00</span>
+          <span>09:00</span>
+          <span>10:00</span>
+          <span>11:00</span>
+          <span>12:00</span>
+          <span>13:00</span>
+          <span>14:00</span>
         </div>
       </div>
     </div>
   );
 }
-

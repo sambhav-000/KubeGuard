@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#080B14] text-slate-100">
+      <body className="min-h-full flex flex-col bg-[#030712] text-[#F1F5FF]">
         <DashboardProvider>
           <AppLayout>{children}</AppLayout>
         </DashboardProvider>

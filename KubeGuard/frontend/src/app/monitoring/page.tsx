@@ -28,10 +28,10 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1c283f]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#15243E]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <Activity className="text-sky-400" size={26} />
+          <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+            <Activity className="text-[#00D9FF]" size={26} />
             <span>Infrastructure & Workload Monitoring</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -43,7 +43,7 @@ export default function MonitoringPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#0c1426] hover:bg-[#111d38] border border-[#1a2846] transition"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#050D1C] hover:bg-[#15243E] border border-[#172A46] transition"
           >
             <Download size={14} />
             <span>Export CSV</span>
@@ -57,10 +57,10 @@ export default function MonitoringPage() {
       {/* Application Performance & Ingress Metrics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Request Rate & Error Rate */}
-        <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-[#1f2b3f] mb-4">
+        <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-[#15243E] mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white tracking-tight">
+              <h3 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
                 HTTP Request & Ingress Error Rate
               </h3>
               <p className="text-xs text-slate-400">
@@ -79,22 +79,22 @@ export default function MonitoringPage() {
                 <div className="flex justify-between text-[11px] font-mono text-slate-400">
                   <span>{d.timeLabel}</span>
                   <span className="text-slate-300">
-                    <span className="text-sky-400">{d.requestRate} req/s</span>
+                    <span className="text-[#00D9FF]">{d.requestRate} req/s</span>
                     {d.errorRate > 5 && (
-                      <span className="text-rose-400 ml-2 font-bold">
+                      <span className="text-[#FF426D] ml-2 font-bold">
                         ({d.errorRate} errors)
                       </span>
                     )}
                   </span>
                 </div>
-                <div className="w-full bg-[#16233b] h-2 rounded-full overflow-hidden flex">
+                <div className="w-full bg-[#050D1C] border border-[#172A46]/60 h-2 rounded-full overflow-hidden flex">
                   <div
-                    className="bg-sky-500 h-full rounded-l-full"
+                    className="bg-[#00D9FF] h-full rounded-l-full"
                     style={{ width: `${(d.requestRate / 350) * 85}%` }}
                   />
                   {d.errorRate > 0 && (
                     <div
-                      className="bg-rose-500 h-full rounded-r-full"
+                      className="bg-[#FF426D] h-full rounded-r-full"
                       style={{ width: `${(d.errorRate / 200) * 20}%` }}
                     />
                   )}
@@ -105,18 +105,18 @@ export default function MonitoringPage() {
         </div>
 
         {/* Latency (p95 & p99) */}
-        <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1f2b3f] mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#15243E] mb-4">
               <div>
-                <h3 className="text-sm font-bold text-white tracking-tight">
+                <h3 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
                   p95 Response Latency
                 </h3>
                 <p className="text-xs text-slate-400">
                   End-to-end API gateway and ingress latency in milliseconds
                 </p>
               </div>
-              <span className="text-xs font-mono font-bold text-purple-400">
+              <span className="text-xs font-mono font-bold text-violet-400">
                 SLA: &lt;150ms
               </span>
             </div>
@@ -128,16 +128,16 @@ export default function MonitoringPage() {
                     <span>{d.timeLabel}</span>
                     <span
                       className={`font-bold ${
-                        d.latencyP95 > 120 ? "text-rose-400" : "text-purple-400"
+                        d.latencyP95 > 120 ? "text-[#FF426D]" : "text-violet-400"
                       }`}
                     >
                       {d.latencyP95}ms
                     </span>
                   </div>
-                  <div className="w-full bg-[#16233b] h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#050D1C] border border-[#172A46]/60 h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
-                        d.latencyP95 > 120 ? "bg-rose-500" : "bg-purple-500"
+                        d.latencyP95 > 120 ? "bg-[#FF426D]" : "bg-[#7C3AED]"
                       }`}
                       style={{ width: `${(d.latencyP95 / 200) * 100}%` }}
                     />
@@ -151,4 +151,3 @@ export default function MonitoringPage() {
     </div>
   );
 }
-

@@ -36,10 +36,10 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1c283f]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#15243E]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <ShieldCheck className="text-emerald-400" size={26} />
+          <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+            <ShieldCheck className="text-[#10F5A0]" size={26} />
             <span>Compliance & Audit Trail</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -49,7 +49,7 @@ export default function AuditLogsPage() {
 
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#0c1426] hover:bg-[#111d38] border border-[#1a2846] transition"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#050D1C] hover:bg-[#15243E] border border-[#172A46] transition"
         >
           <Download size={14} />
           <span>Export Audit Log</span>
@@ -57,7 +57,7 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#0f172a] border border-[#263244] rounded-2xl p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#08152B] border border-[#172A46] rounded-2xl p-4 shadow-sm">
         <div className="relative w-72">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -65,7 +65,7 @@ export default function AuditLogsPage() {
             placeholder="Search action, actor or resource..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#0a101d] border border-[#1a2846] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500/60"
+            className="w-full bg-[#050D1C] border border-[#172A46] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#00D9FF]/60"
           />
         </div>
 
@@ -73,7 +73,7 @@ export default function AuditLogsPage() {
           <select
             value={actorFilter}
             onChange={(e) => setActorFilter(e.target.value)}
-            className="bg-[#0a101d] border border-[#1a2846] rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500/60 cursor-pointer"
+            className="bg-[#050D1C] border border-[#172A46] rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-[#00D9FF]/60 cursor-pointer"
           >
             <option value="all">All Actors</option>
             <option value="User">Human Engineers</option>
@@ -83,10 +83,10 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Audit Table */}
-      <div className="bg-[#0f172a] border border-[#263244] rounded-2xl p-6 shadow-sm overflow-x-auto">
+      <div className="bg-[#08152B] border border-[#172A46] rounded-2xl p-6 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#1c283f] text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+            <tr className="border-b border-[#15243E] text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
               <th className="py-3 px-3">Timestamp</th>
               <th className="py-3 px-3">Actor</th>
               <th className="py-3 px-3">Action</th>
@@ -95,9 +95,9 @@ export default function AuditLogsPage() {
               <th className="py-3 px-3">Details</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#172238]">
+          <tbody className="divide-y divide-[#15243E]/60">
             {filtered.map((log) => (
-              <tr key={log.id} className="hover:bg-[#121c33]/60 transition">
+              <tr key={log.id} className="hover:bg-[#050D1C]/80 transition">
                 <td className="py-3.5 px-3 font-mono text-slate-400">
                   {log.timestamp}
                 </td>
@@ -107,15 +107,15 @@ export default function AuditLogsPage() {
                     {log.actorType === "KubeGuard Engine" ? (
                       <Sparkles size={13} className="text-violet-400 flex-shrink-0" />
                     ) : (
-                      <User size={13} className="text-sky-400 flex-shrink-0" />
+                      <User size={13} className="text-[#00D9FF] flex-shrink-0" />
                     )}
-                    <span className="font-semibold text-white truncate max-w-[150px]">
+                    <span className="font-semibold text-[#F1F5FF] truncate max-w-[150px]">
                       {log.actor}
                     </span>
                   </div>
                 </td>
 
-                <td className="py-3.5 px-3 font-mono font-semibold text-sky-300">
+                <td className="py-3.5 px-3 font-mono font-semibold text-[#00D9FF]">
                   {log.action}
                 </td>
 
@@ -127,8 +127,8 @@ export default function AuditLogsPage() {
                   <span
                     className={`inline-block text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border ${
                       log.outcome === "Success"
-                        ? "bg-emerald-950/60 border-emerald-800/40 text-emerald-300"
-                        : "bg-rose-950/60 border-rose-800/40 text-rose-300"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-[#10F5A0]"
+                        : "bg-rose-500/10 border-rose-500/30 text-[#FF426D]"
                     }`}
                   >
                     {log.outcome}
@@ -146,4 +146,3 @@ export default function AuditLogsPage() {
     </div>
   );
 }
-

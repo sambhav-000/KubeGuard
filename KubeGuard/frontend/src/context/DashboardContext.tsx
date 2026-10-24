@@ -76,8 +76,8 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [clusters] = useState<ClusterInfo[]>(mockClusters);
-  const [currentClusterId, setCurrentClusterId] = useState<string>("kind-kubeguard");
-  const [currentEnv, setCurrentEnv] = useState<Environment>("DEVELOPMENT");
+  const [currentClusterId, setCurrentClusterId] = useState<string>("kube-prod-cluster");
+  const [currentEnv, setCurrentEnv] = useState<Environment>("PRODUCTION");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [timeRange, setTimeRange] = useState<"1h" | "6h" | "24h" | "7d">("6h");

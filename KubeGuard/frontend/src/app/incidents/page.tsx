@@ -32,10 +32,10 @@ export default function IncidentsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1c283f]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#15243E]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <TriangleAlert className="text-rose-400" size={26} />
+          <h1 className="text-2xl font-extrabold text-[#F1F5FF] tracking-tight flex items-center gap-3">
+            <TriangleAlert className="text-[#FF426D]" size={26} />
             <span>Incident Management Center</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -44,7 +44,7 @@ export default function IncidentsPage() {
         </div>
 
         {/* Severity Filter Tabs */}
-        <div className="flex items-center bg-[#0c1426] border border-[#1a2846] rounded-xl p-0.5 text-xs font-medium">
+        <div className="flex items-center bg-[#050D1C] border border-[#172A46] rounded-xl p-0.5 text-xs font-medium">
           {[
             { id: "all", label: `All (${incidents.length})` },
             { id: "critical", label: `Critical (${criticalCount})` },
@@ -56,7 +56,7 @@ export default function IncidentsPage() {
               onClick={() => setFilterSeverity(tab.id)}
               className={`px-3 py-1.5 rounded-lg transition ${
                 filterSeverity === tab.id
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-md"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -71,7 +71,7 @@ export default function IncidentsPage() {
         {filtered.map((inc) => (
           <div
             key={inc.id}
-            className="bg-[#0f172a] border border-[#263244] hover:border-slate-700/80 rounded-2xl p-6 shadow-sm transition space-y-4"
+            className="bg-[#08152B] border border-[#172A46] hover:border-slate-600/80 rounded-2xl p-6 shadow-md transition space-y-4"
           >
             {/* Top row */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -79,10 +79,10 @@ export default function IncidentsPage() {
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     inc.severity === "critical"
-                      ? "bg-rose-500/15 border border-rose-500/30 text-rose-400"
+                      ? "bg-rose-500/10 border border-rose-500/30 text-[#FF426D]"
                       : inc.severity === "warning"
-                      ? "bg-amber-500/15 border border-amber-500/30 text-amber-400"
-                      : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+                      ? "bg-amber-500/10 border border-amber-500/30 text-[#FFB020]"
+                      : "bg-emerald-500/10 border border-emerald-500/30 text-[#10F5A0]"
                   }`}
                 >
                   <ShieldAlert size={20} />
@@ -99,7 +99,7 @@ export default function IncidentsPage() {
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-white tracking-tight mt-1">
+                  <h3 className="text-base font-bold text-[#F1F5FF] tracking-tight mt-1">
                     {inc.title}
                   </h3>
 
@@ -113,7 +113,7 @@ export default function IncidentsPage() {
               <div className="flex items-center gap-2 sm:self-start">
                 <button
                   onClick={() => setSelectedIncident(inc)}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-sky-400 hover:text-sky-300 bg-sky-950/40 hover:bg-sky-950/70 border border-sky-800/50 transition flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-[#00D9FF] hover:text-cyan-300 bg-[#050D1C] hover:bg-[#15243E] border border-[#172A46] transition flex items-center gap-1.5"
                 >
                   <Sparkles size={13} />
                   <span>View Diagnosis</span>
@@ -128,7 +128,7 @@ export default function IncidentsPage() {
                     <span>Auto-Remediate</span>
                   </button>
                 ) : (
-                  <span className="text-xs font-semibold text-emerald-400 font-mono flex items-center gap-1 px-3 py-1.5 bg-emerald-950/40 rounded-xl border border-emerald-800/40">
+                  <span className="text-xs font-semibold text-[#10F5A0] font-mono flex items-center gap-1 px-3 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
                     <CheckCircle2 size={13} />
                     <span>Remediated</span>
                   </span>
@@ -137,12 +137,12 @@ export default function IncidentsPage() {
             </div>
 
             {/* Failure Signal & Diagnosis details */}
-            <div className="bg-[#0a101d] border border-[#1a2846] rounded-xl p-4 space-y-2 text-xs">
+            <div className="bg-[#050D1C] border border-[#172A46] rounded-xl p-4 space-y-2 text-xs">
               <div className="flex items-start gap-2">
                 <span className="text-slate-400 font-semibold flex-shrink-0">
                   Observed Failure:
                 </span>
-                <span className="text-rose-300 font-mono">
+                <span className="text-rose-400 font-mono">
                   {inc.failureReason}
                 </span>
               </div>
@@ -156,11 +156,11 @@ export default function IncidentsPage() {
                 </span>
               </div>
 
-              <div className="flex items-start gap-2 pt-2 border-t border-[#162235]">
+              <div className="flex items-start gap-2 pt-2 border-t border-[#15243E]">
                 <span className="text-slate-400 font-semibold flex-shrink-0">
                   Current Status:
                 </span>
-                <span className="text-emerald-400 font-mono">
+                <span className="text-[#10F5A0] font-mono">
                   {inc.actionTaken}
                 </span>
               </div>
@@ -171,4 +171,3 @@ export default function IncidentsPage() {
     </div>
   );
 }
-

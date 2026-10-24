@@ -12,7 +12,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed } = useDashboard();
 
   return (
-    <div className="min-h-screen bg-[#080B14] text-slate-100 flex flex-col font-sans antialiased selection:bg-blue-600/40 selection:text-white">
+    <div className="min-h-screen bg-[#030712] text-[#F1F5FF] flex flex-col font-sans antialiased selection:bg-[#7C3AED]/40 selection:text-white">
       {/* Sidebar */}
       <Sidebar />
 
