@@ -54,13 +54,16 @@ export function RecoveryTimeline() {
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#15243E]">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-[#00D9FF]">
               <FileText size={16} />
             </div>
             <h2 className="text-sm font-bold text-[#F1F5FF] tracking-tight">
               Self-Healing Activity
             </h2>
+            <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-950/60 border border-violet-800/40 text-violet-300">
+              Demo Data
+            </span>
           </div>
 
           <Link

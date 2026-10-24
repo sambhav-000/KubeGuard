@@ -154,7 +154,7 @@ export default function OverviewPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl leading-relaxed">
-              Your cluster is <span className="text-[#10F5A0] font-semibold">healthy</span> and running smoothly. Here's what's happening in your environment.
+              Monitor your infrastructure. Detect incidents. Recover intelligently. Your cluster is <span className="text-[#10F5A0] font-semibold">healthy</span> and running smoothly.
             </p>
           </div>
 
