@@ -134,13 +134,13 @@ export default function WorkloadsPage() {
                 <div>
                   <span className="text-slate-400 text-[11px]">CPU Usage</span>
                   <div className="text-[#00D9FF] font-bold mt-0.5">
-                    {w.cpuUsage} ({w.cpuPercent}%)
+                    {w.cpuUsage !== " — " ? `${w.cpuUsage} (${w.cpuPercent}%)` : " — "}
                   </div>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px]">Memory Usage</span>
                   <div className="text-violet-400 font-bold mt-0.5">
-                    {w.memUsage} ({w.memPercent}%)
+                    {w.memUsage !== " — " ? `${w.memUsage} (${w.memPercent}%)` : " — "}
                   </div>
                 </div>
               </div>

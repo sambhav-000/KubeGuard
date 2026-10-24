@@ -29,6 +29,9 @@ import {
   ClusterHealth,
   KubernetesDeployment,
   KubernetesPod,
+  MetricsSummary,
+  MetricsRangeResponse,
+  WorkloadMetricsResponse,
 } from "@/lib/api";
 
 export interface ToastItem {
@@ -84,6 +87,12 @@ interface DashboardContextType {
   rollbackDeployment: (deploymentId: string) => void;
   alertRules: AlertRule[];
   toggleAlertRule: (ruleId: string) => void;
+  // Live Prometheus metrics
+  metricsSummary: MetricsSummary | null;
+  metricsRangeData: MetricsRangeResponse | null;
+  workloadMetrics: WorkloadMetricsResponse | null;
+  metricsLoading: boolean;
+  metricsUnavailable: boolean;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -131,6 +140,13 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [deployments, setDeployments] = useState<DeploymentRecord[]>(mockDeployments);
   const [alertRules, setAlertRules] = useState<AlertRule[]>(mockAlertRules);
 
+  // Live Prometheus metrics state
+  const [metricsSummary, setMetricsSummary] = useState<MetricsSummary | null>(null);
+  const [metricsRangeData, setMetricsRangeData] = useState<MetricsRangeResponse | null>(null);
+  const [workloadMetrics, setWorkloadMetrics] = useState<WorkloadMetricsResponse | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState<boolean>(true);
+  const [metricsUnavailable, setMetricsUnavailable] = useState<boolean>(false);
+
   const currentCluster = clusters.find((c) => c.id === currentClusterId) || clusters[0];
   const isRefreshingRef = useRef(false);
 
@@ -153,14 +169,34 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setSidebarCollapsed((prev) => !prev);
   };
 
-  // Maps live Kubernetes data to application models
+  // Maps live Kubernetes data and Prometheus metrics to application models
   const applyLiveData = useCallback(
     (
       health: ClusterHealth,
       deploymentList: KubernetesDeployment[],
-      podList: KubernetesPod[]
+      podList: KubernetesPod[],
+      wlMetrics?: WorkloadMetricsResponse | null,
+      mSummary?: MetricsSummary | null,
+      rangeData?: MetricsRangeResponse | null
     ) => {
-      // 1. Map workloads conservatively without fabricating unavailable metrics
+      if (wlMetrics) {
+        setWorkloadMetrics(wlMetrics);
+      }
+      if (mSummary) {
+        setMetricsSummary(mSummary);
+      }
+      if (rangeData) {
+        setMetricsRangeData(rangeData);
+      }
+
+      const isUnavailable =
+        (mSummary && mSummary.status === "unavailable") ||
+        (rangeData && rangeData.status === "unavailable") ||
+        (wlMetrics && wlMetrics.status === "unavailable");
+      setMetricsUnavailable(Boolean(isUnavailable));
+      setMetricsLoading(false);
+
+      // 1. Map workloads with live metrics if available
       const mappedWorkloads: WorkloadItem[] = deploymentList.map((dep) => {
         const matchingPods = podList.filter(
           (p) =>
@@ -172,6 +208,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           0
         );
 
+        const depMetric = wlMetrics?.deployments?.find(
+          (d) => d.name === dep.name && d.namespace === dep.namespace
+        );
+
         return {
           id: `${dep.namespace}-${dep.name}`,
           name: dep.name,
@@ -179,10 +219,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           kind: "Deployment",
           desiredReplicas: dep.desired_replicas,
           readyReplicas: dep.ready_replicas,
-          cpuUsage: " — ",
-          cpuPercent: 0,
-          memUsage: " — ",
-          memPercent: 0,
+          cpuUsage: depMetric ? depMetric.cpu_display : " — ",
+          cpuPercent: depMetric ? depMetric.cpu_percent : 0,
+          memUsage: depMetric ? depMetric.memory_display : " — ",
+          memPercent: depMetric ? depMetric.memory_percent : 0,
           status: deriveWorkloadStatus(dep.desired_replicas, dep.ready_replicas),
           restarts: totalRestarts,
           lastUpdated: " — ",
@@ -241,18 +281,22 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       setIsRefreshing(true);
 
       try {
-        const [health, deploymentList, podList] = await Promise.all([
-          kubeguardApi.health(),
-          kubeguardApi.deployments(),
-          kubeguardApi.pods(),
-        ]);
+        const [health, deploymentList, podList, mSummary, mRange, wlMetrics] =
+          await Promise.all([
+            kubeguardApi.health(),
+            kubeguardApi.deployments(),
+            kubeguardApi.pods(),
+            kubeguardApi.metricsSummary().catch(() => null),
+            kubeguardApi.metricsRange(timeRange).catch(() => null),
+            kubeguardApi.workloadMetrics().catch(() => null),
+          ]);
 
-        applyLiveData(health, deploymentList, podList);
+        applyLiveData(health, deploymentList, podList, wlMetrics, mSummary, mRange);
 
         if (isManualRefresh) {
           showToast(
-            "Cluster state synchronized",
-            `Fetched ${deploymentList.length} deployments and ${podList.length} pods from Kubernetes API`,
+            "Cluster telemetry synchronized",
+            `Fetched ${deploymentList.length} deployments and live Prometheus telemetry`,
             "success"
           );
         }
@@ -267,7 +311,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         setIsRefreshing(false);
       }
     },
-    [applyLiveData, showToast]
+    [applyLiveData, showToast, timeRange]
   );
 
   // Automatic live fetch on mount
@@ -279,14 +323,18 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       setIsRefreshing(true);
 
       try {
-        const [health, deploymentList, podList] = await Promise.all([
-          kubeguardApi.health(),
-          kubeguardApi.deployments(),
-          kubeguardApi.pods(),
-        ]);
+        const [health, deploymentList, podList, mSummary, mRange, wlMetrics] =
+          await Promise.all([
+            kubeguardApi.health(),
+            kubeguardApi.deployments(),
+            kubeguardApi.pods(),
+            kubeguardApi.metricsSummary().catch(() => null),
+            kubeguardApi.metricsRange(timeRange).catch(() => null),
+            kubeguardApi.workloadMetrics().catch(() => null),
+          ]);
 
         if (!isMounted) return;
-        applyLiveData(health, deploymentList, podList);
+        applyLiveData(health, deploymentList, podList, wlMetrics, mSummary, mRange);
       } catch (err: unknown) {
         if (!isMounted) return;
         const message =
@@ -307,7 +355,30 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [applyLiveData, showToast]);
+  }, [applyLiveData, showToast, timeRange]);
+
+  // Synchronize range metrics when user toggles 1h / 6h / 24h / 7d
+  useEffect(() => {
+    let isCancelled = false;
+    kubeguardApi
+      .metricsRange(timeRange)
+      .then((res) => {
+        if (!isCancelled) {
+          setMetricsRangeData(res);
+          if (res?.status === "unavailable") {
+            setMetricsUnavailable(true);
+          }
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setMetricsUnavailable(true);
+        }
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [timeRange]);
 
   // Real asynchronous manual refresh
   const triggerRefresh = useCallback(() => {
@@ -476,6 +547,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         rollbackDeployment,
         alertRules,
         toggleAlertRule,
+        metricsSummary,
+        metricsRangeData,
+        workloadMetrics,
+        metricsLoading,
+        metricsUnavailable,
       }}
     >
       {children}
